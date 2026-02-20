@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Courier Formatter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            width: 95%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            resize: none;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .generate-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .generate-btn:hover {
+            background: #45a049;
+        }
+
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #1976d2;
+        }
+
+        pre {
+            background: #f7f7f7;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        @media(max-width: 600px) {
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🚚 Product Courier Formatter</h2>
+
+    <textarea id="inputData" placeholder="Paste your product data here..."></textarea>
+
+    <div class="btn-group">
+        <button class="generate-btn" onclick="processData()">Generate Output</button>
+        <button class="copy-btn" onclick="copyOutput()">Copy Output</button>
+    </div>
+
+    <pre id="output"></pre>
+</div>
+
+<script>
+function processData() {
+    const input = document.getElementById("inputData").value;
+    const blocks = input.split('----------------------------------------');
+
+    let products = {};
+
+    blocks.forEach(block => {
+        block = block.trim();
+        if (!block) return;
+
+        const lines = block.split("\n");
+        const productMatch = lines[0].match(/(.*?)-\s*Total:\s*(\d+)/);
+
+        if (productMatch) {
+            const productName = productMatch[1].trim();
+            const totalQty = parseInt(productMatch[2]);
+
+            if (!products[productName]) {
+                products[productName] = { total: 0, couriers: {} };
+            }
+
+            products[productName].total += totalQty;
+
+            for (let i = 1; i < lines.length; i++) {
+                const courierMatch = lines[i].match(/(.*?)\s*-\s*(\d+)/);
+                if (courierMatch) {
+                    const courierName = courierMatch[1].trim();
+                    const qty = parseInt(courierMatch[2]);
+
+                    if (!products[productName].couriers[courierName]) {
+                        products[productName].couriers[courierName] = 0;
+                    }
+
+                    products[productName].couriers[courierName] += qty;
+                }
+            }
+        }
+    });
+
+    const sortedProducts = Object.keys(products).sort();
+   let output = "";
+
+    sortedProducts.forEach(product => {
+        output += `Product: ${product}\n`;
+        output += `Total Quantity: ${products[product].total} = ${products[product].total}\n`;
+        output += "🚚Couriers:\n";
+
+        const sortedCouriers = Object.keys(products[product].couriers).sort();
+
+        sortedCouriers.forEach(courier => {
+            const qty = products[product].couriers[courier];
+            output += ` . ${courier}: ${qty} = ${qty}\n`;
+        });
+
+        output += "----------------------------------------\n";
+    });
+
+    document.getElementById("output").textContent = output;
+}
+
+function copyOutput() {
+    const outputText = document.getElementById("output").textContent;
+
+    if (!outputText) {
+        alert("No output to copy!");
+        return;
+    }
+
+    navigator.clipboard.writeText(outputText).then(() => {
+        alert("Output copied successfully!");
+    });
+}
+</script>
+
+</body>
+</html>
